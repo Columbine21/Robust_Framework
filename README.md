@@ -8,7 +8,7 @@
 >
 > - The Framework incorporates a modular pipeline that facilitates video noise based augmentation and effortless model evaluation, encompassing both instance-level editable video noise effect analysis and batch-level quantitative assessments.
 
-<img src="C:\Users\Windows\Desktop\structure.png" alt="structure" style="zoom:80%;" />
+<img src="assets/structure.png" alt="structure" style="zoom:80%;" />
 
 ## Model Training and Quantitative Evaluation Pipeline.
 

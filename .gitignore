@@ -157,4 +157,5 @@ cython_debug/
 
 pretrained_model
 results
-assets
+assets/noise
+assets/temp
