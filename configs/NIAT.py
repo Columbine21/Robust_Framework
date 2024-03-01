@@ -77,7 +77,7 @@ class NIAT_Config(BaseConfig):
         elif self.dataset == 'SIMSv2': 
             # NOTE  just a copy and paste of MOSEI Hyperparameters w.o. tuning.
             # self.pretrained_bert_model = 'bert-base-chinese'
-            self.pretrained_bert_model = 'pretrained_model/bert_cn'
+            self.pretrained_bert_model = 'bert-base-chinese'
             self.fus_d_l, self.fus_d_a, self.fus_d_v = 96, 16, 32
             self.fus_conv1d_kernel_l = 3
             self.fus_conv1d_kernel_a = 5
@@ -98,7 +98,7 @@ class NIAT_Config(BaseConfig):
             self.clf_dropout = 0.2
             self.clf_hidden_dim = 256
             self.alpha = 0.6
-            self.batch_size = 32
+            self.batch_size = 64  #64 128  24
             self.beta = 1.0
             # below is used when finetune_bert is True
             self.learning_rate_bert = 2e-06

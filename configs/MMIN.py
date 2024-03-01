@@ -40,8 +40,8 @@ class MMIN_Config(BaseConfig):
             self.mse_weight = 1.0
             self.cycle_weight = 1.0
 
-            self.batch_size = 64
-            self.lr = 0.002
+            self.batch_size = 128
+            self.lr = 0.0001
             self.beta1 = 0.5
 
         elif self.dataset == 'MOSEI':
@@ -75,7 +75,7 @@ class MMIN_Config(BaseConfig):
             self.beta1 = 0.5
         elif self.dataset == 'SIMSv2':
             # self.pretrained_bert_model = 'bert-base-chinese'
-            self.pretrained_bert_model = 'pretrained_model/bert_cn'
+            self.pretrained_bert_model = 'bert-base-chinese'
             
             self.embd_size_a = 64
             self.embd_size_t = 64
@@ -101,7 +101,7 @@ class MMIN_Config(BaseConfig):
             self.cycle_weight = 1.0
 
             self.batch_size = 64
-            self.lr = 0.002
+            self.lr = 0.0005
             self.beta1 = 0.5
 
         elif self.dataset == 'MIntRec':

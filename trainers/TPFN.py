@@ -50,6 +50,10 @@ class TPFN_Trainer(BaseTrainer):
                     optimizer.zero_grad()
                     # compute loss, backward, update.
                     prediction, reg_loss = model(text, audio, vision, audio_lengths, vision_lengths)
+                    prediction = torch.where(
+                    torch.isnan(prediction),
+                    torch.full_like(prediction, 0),
+                    prediction)
                     loss = self.criterion(prediction, labels) + reg_loss * self.config.reg_loss_weight
                     loss.backward()
                     optimizer.step()
@@ -98,7 +102,10 @@ class TPFN_Trainer(BaseTrainer):
                     else: # Regression Task.
                         labels = labels.view(-1, 1)
                     prediction, _ = model(text, audio, vision, audio_lengths, vision_lengths)
-                    
+                    prediction = torch.where(
+                    torch.isnan(prediction),
+                    torch.full_like(prediction, 0),
+                    prediction)
                     loss = self.criterion(prediction, labels)
                     eval_loss += loss.item()
                     y_pred.append(prediction.cpu())

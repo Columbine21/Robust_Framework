@@ -9,15 +9,15 @@ from utils.feat_noise import feature_noise
 def parse_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--dataset', type=str, default='MOSI', choices=['MOSI', 'MOSEI', 'SIMSv2', 'MIntRec'],
+    parser.add_argument('--dataset', type=str, default='SIMSv2', choices=['MOSI', 'MOSEI', 'SIMSv2', 'MIntRec'],
                         help='Video Understanding Dataset Name.')
     parser.add_argument('--injected-noise', type=str, default='feat_structural_drop',
-                        help='Evaluation Noise Type (validation and test).')
+                        help='Evaluation Noise Type (validation and test). [feat_structural_drop,feat_random_drop]')
     parser.add_argument('--noise-intensity', type=float, default=0.2,
                         help='Noise Intensity (0.0 ~ 1.0).')
     parser.add_argument('--inject-noise-seed', type=list, default=[1111],
                         help='Random seed for injecting noise.')
-    parser.add_argument('--save-dir', type=str, default=NOISY_DATASET_ROOT_DIR,
+    parser.add_argument('--save-dir', type=str, default='/home/sharing/disk3/Datasets/MMSA-Noise',
                         help='Path to save constructed noisy databases for model training or evaluation.')
     parser.add_argument('--log-dir', type=str, default='results/logs',
                         help='Path to save log files. Default: "~/results/logs"')
@@ -49,11 +49,11 @@ if __name__ == '__main__':
             seeds=config.inject_noise_seed
         )
     # Remove Unnecessary Keys.
-    for mode in ['train', 'valid', 'test']:
-        noise_data[mode].pop('asr_text')
-        noise_data[mode].pop('asr_bert')
-        noise_data[mode].pop('text')
-        noise_data[mode].pop('annotations')
+    # for mode in ['train', 'valid', 'test']:
+    #     noise_data[mode].pop('asr_text')
+    #     noise_data[mode].pop('asr_bert')
+    #     noise_data[mode].pop('text')
+    #     noise_data[mode].pop('annotations')
     # Dump noisy databases.
     print('Dumping noisy databases...')
     save_path = Path(config.save_dir, f'{config.dataset}', f'{config.injected_noise}',

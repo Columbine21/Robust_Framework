@@ -45,7 +45,7 @@ class TFRNet_Config(BaseConfig):
             self.grad_clip = 0.8
             self.batch_size = 24
             self.learning_rate_bert = 2e-6
-            self.learning_rate_other = 0.001
+            self.learning_rate_other = 0.003
             self.patience = 5
             self.weight_decay_bert = 0.0001
             self.weight_decay_other = 0.001
@@ -91,7 +91,7 @@ class TFRNet_Config(BaseConfig):
         elif self.dataset == 'SIMSv2':
             self.output_dim = 1
             # self.pretrained = 'bert-base-chinese'
-            self.pretrained = 'pretrained_model/bert_cn'
+            self.pretrained_bert_model = 'bert-base-chinese'
             self.text_dropout = 0.2
             self.conv1d_kernel_size_l = 1
             self.conv1d_kernel_size_a = 5
@@ -124,13 +124,13 @@ class TFRNet_Config(BaseConfig):
             self.grad_clip = 0.8
             self.batch_size = 16
             self.learning_rate_bert = 1e-5
-            self.learning_rate_other = 0.002
+            self.learning_rate_other = 0.001
             self.patience = 10
             self.weight_decay_bert = 0.0001
             self.weight_decay_other = 0.001
             self.weight_gen_loss = [1, 0.01, 0.0001]
             self.weight_sim_loss = 5
-            self.num_temporal_head = 25
+            self.num_temporal_head = 1
         elif self.dataset == 'MIntRec':
             self.output_dim = 20
             self.pretrained_bert_model = 'bert-base-uncased'

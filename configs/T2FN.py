@@ -21,7 +21,7 @@ class T2FN_Config(BaseConfig):
             self.post_fusion_dim = 128
             self.dropouts = [0.1, 0.1, 0.1, 0.1]
             self.batch_size = 32
-            self.learning_rate = 0.001
+            self.learning_rate = 0.0007
             # below is used when finetune_bert is True
             self.learning_rate_bert = 2e-05
             self.weight_decay_bert = 0.0001
@@ -47,14 +47,13 @@ class T2FN_Config(BaseConfig):
             self.reg_loss_weight = 0.001
             self.output_dim = 1
         elif self.dataset == "SIMSv2":
-            # self.pretrained_bert_model = 'bert-base-chinese'
-            self.pretrained_bert_model = 'pretrained_model/bert_cn'
+            self.pretrained_bert_model = 'bert-base-chinese'
             self.hidden_dims = [128, 16, 128]
             self.text_out = 64
             self.post_fusion_dim = 32
             self.dropouts = [0.3, 0.3, 0.3, 0.5]
             self.batch_size = 64
-            self.learning_rate = 1e-3
+            self.learning_rate = 3e-3
             # below is used when finetune_bert is True
             self.learning_rate_bert = 2e-06
             self.weight_decay_bert = 0.0

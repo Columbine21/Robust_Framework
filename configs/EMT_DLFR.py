@@ -119,9 +119,9 @@ class EMT_DLFR_Config(BaseConfig):
 
         elif self.dataset == 'SIMSv2':
             # self.pretrained_bert_model = 'bert-base-chinese'
-            self.pretrained_bert_model = 'pretrained_model/bert_cn'
+            self.pretrained_bert_model = 'bert-base-chinese'
             self.batch_size = 32
-            self.learning_rate_bert = 2e-5
+            self.learning_rate_bert = 1e-5
             self.learning_rate_audio = 1e-3
             self.learning_rate_video = 1e-3
             self.learning_rate_other = 1e-3

@@ -8,7 +8,6 @@ import numpy as np
 
 from configs import BaseConfig
 from torch.autograd import Variable
-from models.subnets.BertTextEncoder import BertTextEncoder
 from torch_geometric.nn import RGCNConv, GraphConv
 
 

@@ -75,9 +75,9 @@ def feature_noise(
         text_mask_multiseed, audio_mask_multiseed, vision_mask_multiseed = None, None, None
 
         # Calculate the length of missing blocks.
-        missing_block_t_len = np.around((input_len_text - 2) * missing_rate[0]).astype(np.int)
-        missing_block_a_len = np.around(input_len_audio * missing_rate[1]).astype(np.int)
-        missing_block_v_len = np.around(input_len_vision * missing_rate[2]).astype(np.int)
+        missing_block_t_len = np.around((input_len_text - 2) * missing_rate[0]).astype(np.int32)
+        missing_block_a_len = np.around(input_len_audio * missing_rate[1]).astype(np.int32)
+        missing_block_v_len = np.around(input_len_vision * missing_rate[2]).astype(np.int32)
         missing_mask_t = input_mask_text.copy()
         missing_mask_a = input_mask_audio.copy()
         missing_mask_v = input_mask_vision.copy()
@@ -85,17 +85,22 @@ def feature_noise(
             np.random.seed(missing_seed)
 
             for i, _ in enumerate(missing_mask_t):
-                start_p = np.random.randint(low=1, high=input_len_text[i] - missing_block_t_len[i])
+                start_p = np.random.randint(low=0, high=input_len_text[i] - missing_block_t_len[i])
                 missing_mask_t[i, start_p:start_p+missing_block_t_len[i]] = 0
-
+            
             for i, _ in enumerate(missing_mask_a):
-                start_p = np.random.randint(low=1, high=input_len_audio[i] - missing_block_a_len[i])
-                missing_mask_a[i, start_p:start_p+missing_block_a_len[i]] = 0
+                if input_len_audio[i] > missing_block_a_len[i]:
+                    start_p = np.random.randint(low=0, high=input_len_audio[i] - missing_block_a_len[i])
+                    missing_mask_a[i, start_p:start_p+missing_block_a_len[i]] = 0
+                else:
+                    missing_mask_a[i,:] = 0
 
             for i, _ in enumerate(missing_mask_v):
-                start_p = np.random.randint(low=1, high=input_len_vision[i] - missing_block_v_len[i])
-                missing_mask_v[i, start_p:start_p+missing_block_v_len[i]] = 0
-            
+                if input_len_vision[i] > missing_block_v_len[i]:
+                    start_p = np.random.randint(low=0, high=input_len_vision[i] - missing_block_v_len[i])
+                    missing_mask_v[i, start_p:start_p+missing_block_v_len[i]] = 0
+                else:
+                    missing_mask_v[i,:] = 0
             text_m = missing_mask_t * text[:,0,:] + (100 * np.ones_like(text[:,0,:])) * (input_mask_text - missing_mask_t) # UNK token: 100.
             text_m = np.concatenate((np.expand_dims(text_m, 1), text[:,1:,:]), axis=1) 
             audio_m = np.expand_dims(missing_mask_a, axis=2) * audio

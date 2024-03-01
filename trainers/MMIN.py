@@ -212,7 +212,10 @@ class MMIN_Trainer(BaseTrainer):
                         feat_V = model.netV(vision)
                         _, latent = model.netAE(torch.cat([feat_A, feat_T, feat_V], dim=-1))
                         prediction = model.netC2(latent)
-                    
+                    prediction = torch.where(
+                    torch.isnan(prediction),
+                    torch.full_like(prediction, 0),
+                    prediction)
                     loss = self.criterion(prediction, labels)
                     eval_loss += loss.item()
                     y_pred.append(prediction.cpu())

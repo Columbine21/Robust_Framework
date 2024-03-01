@@ -18,12 +18,13 @@ class T2FN_Trainer(BaseTrainer):
             y_pred, y_true = [], []
             model.train()
             train_loss = 0.0
+            # 84
             with tqdm(dataloader['train']) as td:
                 for batch_data in td:
                     vision = batch_data['vision'].to(self.config.device)
                     audio = batch_data['audio'].to(self.config.device)
                     text = batch_data['text'].to(self.config.device)
-                    vision_lengths = batch_data['vision_lengths'].to(self.config.device)
+                    vision_lengths = batch_data['vision_lengths'].to(self.config.device) 
                     audio_lengths = batch_data['audio_lengths'].to(self.config.device)
                     labels = batch_data['labels']['M'].to(self.config.device)
                     if self.config.task == 'MIR': # Classification Task.
@@ -82,7 +83,10 @@ class T2FN_Trainer(BaseTrainer):
                     else: # Regression Task.
                         labels = labels.view(-1, 1)
                     prediction, _ = model(text, audio, vision, audio_lengths, vision_lengths)
-                    
+                    prediction = torch.where(
+                    torch.isnan(prediction),
+                    torch.full_like(prediction, 0),
+                    prediction)
                     loss = self.criterion(prediction, labels)
                     eval_loss += loss.item()
                     y_pred.append(prediction.cpu())

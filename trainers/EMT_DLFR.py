@@ -142,6 +142,10 @@ class EMT_DLFR_Trainer(BaseTrainer):
                         audio_m = batch_data['audio_m'].to(self.config.device) # Paired Noisy data
                         vision_m = batch_data['vision_m'].to(self.config.device) # Paired Noisy data
                         outputs = model((text, text_m), (audio, audio_m, audio_lengths), (vision, vision_m, vision_lengths), mode=mode)
+                        outputs['pred'] = torch.where(
+                        torch.isnan(outputs['pred']),
+                        torch.full_like(outputs['pred'], 0),
+                        outputs['pred'])
                         loss_pred_m = torch.mean(torch.abs(outputs['pred_m'].view(-1) - labels.view(-1)))
                         ## attraction loss (high-level)
                         loss_attra_gmc_tokens = -(self.criterion_attra(outputs['p_gmc_tokens_m'], outputs['z_gmc_tokens']).mean() +
@@ -166,6 +170,10 @@ class EMT_DLFR_Trainer(BaseTrainer):
                         y_pred.append(outputs['pred_m'].cpu())
                     else: # In Test Phase no paired clean data is available.
                         outputs = model((text, None), (audio, None, audio_lengths), (vision, None, vision_lengths), mode=mode)
+                        outputs['pred'] = torch.where(
+                        torch.isnan(outputs['pred']),
+                        torch.full_like(outputs['pred'], 0),
+                        outputs['pred'])
                         loss = torch.mean(torch.abs(outputs['pred'].view(-1) - labels.view(-1)))
                         y_pred.append(outputs['pred'].cpu())
 

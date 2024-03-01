@@ -20,8 +20,10 @@ class Dataset(Dataset):
         # Load Original Feature.
         assert Path(self.config.feature_origin).is_file(), \
             f"Feature file {Path(self.config.feature_origin)} does not exist."
-        text, audio, vision, self.labels, self.raw_text, self.ids, self.audio_lengths, self.vision_lengths = \
+        text, audio, vision, self.labels, self.ids, self.audio_lengths, self.vision_lengths = \
             self._load_feature(config.feature_origin)
+
+
         self.config.seq_lens[0], self.config.seq_lens[1], self.config.seq_lens[2] = \
             text.shape[2], audio.shape[1], vision.shape[1]
         self.config.feature_dims[1], self.config.feature_dims[2] = audio.shape[2], vision.shape[2]
@@ -38,8 +40,10 @@ class Dataset(Dataset):
             for aug_path in self.config.feature_augmented:
                 aug_opt = str(aug_path).split("/")[-2] + '_' + str(aug_path).split("/")[-1].replace('.pkl', '') # e.g. "feat_random_drop_0.5_1111"
                 assert Path(aug_path).is_file(), f"Feature file {aug_path} does not exist."
-                text_, audio_, vision_, _, _, ids_, _, _ = self._load_feature(aug_path)
+                text_, audio_, vision_, _, ids_, _, _ = self._load_feature(aug_path)
                 for n, index in enumerate(ids_):
+                    if not index in self.ids:
+                        continue
                     self.text_l[index].append((aug_opt, text_[n]))
                     self.audio_l[index].append((aug_opt, audio_[n]))
                     self.vision_l[index].append((aug_opt, vision_[n]))
@@ -69,13 +73,13 @@ class Dataset(Dataset):
             labels = {'M': data[self.mode]["labels"].astype(np.float32)}
         else:
             labels = {'M': data[self.mode]["regression_labels"].astype(np.float32)}
-        if self.config.dataset in ["SIMS", "SIMSv2"]:
-            for m in ["T", "A", "V"]:
-                labels[m] = data[self.mode][f"regression_labels_{m}"].astype(np.float32)
-        raw_text = data[self.mode]["raw_text"]
+        # if self.config.dataset in ["SIMS", "SIMSv2"]:
+        #     for m in ["T", "A", "V"]:
+        #         labels[m] = data[self.mode][f"regression_labels_{m}"].astype(np.float32)
+        # raw_text = data[self.mode]["raw_text"]
         ids = data[self.mode]["id"]
 
-        return text, audio, vision, labels, raw_text, ids, audio_lengths, vision_lengths
+        return text, audio, vision, labels, ids, audio_lengths, vision_lengths
 
     def __len__(self):
         return len(self.labels['M'])
@@ -84,7 +88,6 @@ class Dataset(Dataset):
         vid = self.ids[index]
         
         sample = {
-            'raw_text': self.raw_text[index],
             'text': torch.Tensor(random.choice(self.text_l[vid])[1]),
             'audio': torch.Tensor(random.choice(self.audio_l[vid])[1]),
             'vision': torch.Tensor(random.choice(self.vision_l[vid])[1]),

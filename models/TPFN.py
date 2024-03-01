@@ -8,7 +8,6 @@ from configs import BaseConfig
 from models.subnets.BertTextEncoder import BertTextEncoder
 from models.subnets.AlignSubNet import AlignSubNet
 
-
 # The fusion network and the classification network
 class TPFN(nn.Module):
     def __init__(self, config: BaseConfig) -> None:

@@ -41,22 +41,23 @@ def set_logger(config: BaseConfig):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-
     parser.add_argument('--model', type=str, default='TPFN', choices=['T2FN', 'TPFN', 'CTFN', 'MMIN', 'TFRNet', 'GCNET', 'NIAT', 'EMT_DLFR'],
                         help='Robust Baselines Name.')
     parser.add_argument('--augmentation', type=str, default=None, nargs='+', 
                         help='Selected Noise-based Augmentation Type.')
-    parser.add_argument('--dataset', type=str, default='MOSI', choices=['MOSI', 'MOSEI', 'SIMSv2', 'MIntRec'],
+    parser.add_argument('--chart', type=bool, default=False, 
+                        help='Visualization of different missing rates.')
+    parser.add_argument('--dataset', type=str, default='SIMSv2', choices=['MOSI', 'MOSEI', 'SIMSv2', 'MIntRec'],
                         help='Video Understanding Dataset Name.')
     parser.add_argument('--num_workers', type=int, default=0, 
                         help='Number of workers for data loader.')
     parser.add_argument('--eval-noise-type', type=str, default='feat_random_drop',
-                        help='Evaluation Noise Type (validation and test).')
+                        help='Evaluation Noise Type (validation and test). "feat_random_drop", "feat_structural_drop","rawv_impulse_value","rawv_gblur","rawa_color_w","rawa_bg_park"')
     parser.add_argument('--test-missing-seed', type=list, default=[1111],
                         help='Test Missing Seed. (used in feature level noisy instance construction)')
-    parser.add_argument('--seeds', type=list, default=[0, 1, 2],
+    parser.add_argument('--seeds', type=list, default=[0,1,2],
                         help='Seeds for training.')
-    parser.add_argument('--device', action='append', default=[0],
+    parser.add_argument('--device', action='append', default=[1],
                         help='Specify which gpus to use. If an empty list is supplied, will automatically assign to the most memory-free gpu. \
                             Currently only support single gpu. Default: []')
     parser.add_argument('--verbose_level', type=int, default=1,

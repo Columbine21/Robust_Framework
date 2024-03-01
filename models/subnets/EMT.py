@@ -136,7 +136,6 @@ class Attention(nn.Module):
         out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
         return self.to_out(out)
 
-
 class Transformer(nn.Module):
     def __init__(self, dim, depth, heads, dim_head, ff_expansion=4, attn_dropout=0., ff_dropout=0.):
         super().__init__()
@@ -152,7 +151,6 @@ class Transformer(nn.Module):
             x = attn(x, mask=mask) + x
             x = ff(x) + x
         return x
-
 
 # half MPU (mutual promotion unit)
 class CrossSelfTransformer(nn.Module):

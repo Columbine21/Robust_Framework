@@ -121,7 +121,10 @@ class TFRNet_Trainer(BaseTrainer):
                     else: # Regression Task.
                         labels = labels.view(-1, 1)
                     prediction = model((text, None), (audio, None), (vision, None), audio_lengths, vision_lengths, mode='eval')
-                    
+                    prediction = torch.where(
+                    torch.isnan(prediction),
+                    torch.full_like(prediction, 0),
+                    prediction)
                     loss = self.criterion(prediction, labels)
                     eval_loss += loss.item()
                     y_pred.append(prediction.cpu())

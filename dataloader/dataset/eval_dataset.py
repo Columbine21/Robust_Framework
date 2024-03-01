@@ -18,7 +18,7 @@ class TestDataset(Dataset):
             # Load Original Feature.
             assert Path(DATASET_ROOT_DIR, self.config.feature_origin).is_file(), \
                 f"Feature file {Path(DATASET_ROOT_DIR, self.config.feature_origin)} does not exist."
-            text, audio, vision, self.labels, self.raw_text, self.ids, self.audio_lengths, self.vision_lengths = \
+            text, audio, vision, self.labels, self.ids, self.audio_lengths, self.vision_lengths = \
                 self._load_feature(config.feature_origin)
             # Feature level noise.
             self.text, self.audio, self.vision, _, _, _= feature_noise(
@@ -40,7 +40,7 @@ class TestDataset(Dataset):
             # Raw Video Level noise.
             assert file_path.is_file(), f"Feature file {file_path} does not exist."
             
-            self.text, self.audio, self.vision, self.labels, self.raw_text,\
+            self.text, self.audio, self.vision, self.labels,\
                 self.ids, self.audio_lengths, self.vision_lengths = self._load_feature(file_path)
             
         self.logger.info(f"{self.mode} samples: {self.labels['M'].shape}")
@@ -63,20 +63,18 @@ class TestDataset(Dataset):
             labels = {'M': data[self.mode]["labels"].astype(np.float32)}
         else:
             labels = {'M': data[self.mode]["regression_labels"].astype(np.float32)}
-        if self.config.dataset in ["SIMS", "SIMSv2"]:
-            for m in ["T", "A", "V"]:
-                labels[m] = data[self.mode][f"regression_labels_{m}"].astype(np.float32)
-        raw_text = data[self.mode]["raw_text"]
+        # if self.config.dataset in ["SIMS", "SIMSv2"]:
+        #     for m in ["T", "A", "V"]:
+        #         labels[m] = data[self.mode][f"regression_labels_{m}"].astype(np.float32)
         ids = data[self.mode]["id"]
 
-        return text, audio, vision, labels, raw_text, ids, audio_lengths, vision_lengths
+        return text, audio, vision, labels, ids, audio_lengths, vision_lengths
 
     def __len__(self):
         return len(self.labels['M'])
 
     def __getitem__(self, index):
         sample = {
-            'raw_text': self.raw_text[index],
             'text': torch.Tensor(self.text[index]),
             'audio': torch.Tensor(self.audio[index]),
             'vision': torch.Tensor(self.vision[index]),

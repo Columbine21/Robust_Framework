@@ -138,7 +138,10 @@ class NIAT_Trainer(BaseTrainer):
                                                             audio_lengths, vision_lengths)
                     fusion_feature = model.fusion(text, audio, vision)
                     prediction = model.classifier(fusion_feature)
-                    
+                    prediction = torch.where(
+                    torch.isnan(prediction),
+                    torch.full_like(prediction, 0),
+                    prediction)
                     loss = self.criterion(prediction, labels)
                     eval_loss += loss.item()
                     y_pred.append(prediction.cpu())

@@ -6,10 +6,9 @@ from typing import Any, Literal, List
 
 from typeguard import typechecked
 from utils.functions import assign_gpu
-
 ALL_TASKS_LITERAL = Literal["MSA", "MIR"]
 ALL_MODELS_LITERAL = Literal["T2FN", "TPFN", "CTFN", "MMIN", "TFRNet", "GCNET", "NIAT", "EMT_DLFR"]
-ALL_AUGMENTATIONS_LITERAL = Literal["none", "feat_random_drop", "feat_structural_drop","raw_impulse_value","raw_gblur","raw_color_w","raw_bg_park"]
+ALL_AUGMENTATIONS_LITERAL = Literal["none", "feat_random_drop", "feat_structural_drop","rawv_impulse_value","rawv_gblur","rawa_color_w","rawa_bg_park"]
 ALL_DATASETS_LITERAL = Literal["MOSI", "MOSEI", "SIMSv2","MIntRec"]
 DATASET_ROOT_DIR = Path("/home/sharing/disk3/Datasets/MMSA-Standard")
 NOISY_DATASET_ROOT_DIR = Path("/home/sharing/disk3/Datasets/MMSA-Noise")
@@ -62,6 +61,8 @@ class BaseConfig(object):
         self.test_model_path = test_model_path
         self.eval_noise_type = eval_noise_type
         self.test_missing_seed = test_missing_seed
+        self.seq_lens = [50, 1432, 143]
+        self.feature_dims = [768, 25, 171]
         self.seeds = seeds
         self.device = assign_gpu(device)
         self.verbose_level = verbose_level

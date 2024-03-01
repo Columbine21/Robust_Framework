@@ -44,6 +44,10 @@ def parse_args():
 
     parser.add_argument('--model', type=str, default='TPFN', choices=['T2FN', 'TPFN', 'CTFN', 'MMIN', 'TFRNet', 'GCNET', 'NIAT', 'EMT_DLFR'],
                         help='Robust Baselines Name.')
+    parser.add_argument('--augmentation', type=list, default=['feat_random_drop'], 
+                        help='Selected Noise-based Augmentation Type.')
+    parser.add_argument('--chart', type=bool, default=False, 
+                        help='Visualization of different missing rates.')
     parser.add_argument('--dataset', type=str, default='MOSI', choices=['MOSI', 'MOSEI', 'SIMSv2', 'MIntRec'],
                         help='Video Understanding Dataset Name.')
     parser.add_argument('--num_workers', type=int, default=0, 

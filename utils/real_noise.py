@@ -2,42 +2,44 @@ import logging
 import random
 import shutil
 from pathlib import Path
-from typing import NamedTuple
-import logging
+from typing import Literal, NamedTuple
+
 import numpy as np
 from typeguard import typechecked
 
-from .functions import (execute_cmd, get_audio_length, get_video_length,
+from utils.functions import (execute_cmd, get_audio_length, get_video_length,
                         get_video_size, randint_k_order)
 
-logger = logging.getLogger('OpenVNA')
+
 
 class RealNoiseConfig(NamedTuple):
-    mode = "percent"
-    v_mode = ['occlusion']
-    v_start= [0.0]
-    v_end = [1.0]
+    mode: Literal["percent", "exact"] = "percent"
+    v_mode: list[Literal["blank", "avgblur", "gblur", "impulse_value",
+                            "occlusion", "color", "color_channel_swapping", "color_inversion"]] = ['occlusion']
+    v_start: list[float] = [0.0]
+    v_end: list[float] = [1.0]
     v_option: list = [(0.3, 0.3, 0.4, 0.4)]
-    a_mode= ['background']
-    a_start = [0.0]
-    a_end = [1.0]
-    a_option= [('random', 1.0)]
+    a_mode: list[Literal["volume", "mute", "coloran", "background", "sudden", "lowpass", "reverb"]] = ['background']
+    a_start: list[float] = [0.0]
+    a_end: list[float] = [1.0]
+    a_option: list = [('random', 1.0)]
 
 
 @typechecked
 def real_noise(
-    in_file,
-    out_file,
-    mode = "percent",
-    v_mode = [],
-    v_start = [],
-    v_end = [],
-    v_option= [],
-    a_mode= [],
-    a_start = [],
-    a_end = [],
-    a_option = [],
-    seed = None,
+    in_file: str | Path,
+    out_file: str | Path,
+    mode: Literal["percent", "exact"] = "percent",
+    v_mode: list[Literal["blank", "avgblur", "gblur", "impulse_value",
+                            "occlusion", "color", "color_channel_swapping", "color_inversion"]] = [],
+    v_start: list[float] = [],
+    v_end: list[float] = [],
+    v_option: list = [],
+    a_mode: list[Literal["volume", "mute", "coloran", "background", "sudden", "lowpass", "reverb"]] = [],
+    a_start: list[float] = [],
+    a_end: list[float] = [],
+    a_option: list = [],
+    seed: int | None = None,
 ) -> None:
     """
     Add real-world visual and acoustic noise.
@@ -50,11 +52,11 @@ def real_noise(
         in_file (str | Path): Input video file path.
         out_file (str | Path): Output video file path.
         mode (str): "percent" or "exact". Whether start and end time are given as percentage exact timestamp in seconds. This also affects some of the options.
-        v_mode (list[str]): List of visual noise mode. Supported modes: "blank", "blur", "occlusion".
+        v_mode (list[str]): List of visual noise mode. Supported modes: "blank", "avgblur", "gblur", "impulse_value", "occlusion", "color", "color_channel_swapping", "color_inversion".
         v_start (list[float]): List of start time of visual noise.
         v_end (list[float]): List of end time of visual noise.
         v_option (list): List of option for visual noise. See "Options" below for details.
-        a_mode (list[str]): List of acoustic noise mode. Supported modes: "volume", "background", "sudden", "lowpass", "reverb".
+        a_mode (list[str]): List of acoustic noise mode. Supported modes: "volume", "coloran", "background", "sudden", "lowpass", "reverb"
         a_start (list[float]): List of start time of acoustic noise.
         a_end (list[float]): List of end time of acoustic noise.
         a_option (list): List of option for acoustic noise. See "Options" below for details.
@@ -63,8 +65,13 @@ def real_noise(
     Options:
         Blank: 
             No options required. 
-        Blur: 
+        avgBlur:
+            (SizeX, SizeY) of the avgBlur filter.
+            SizeX, SizeY: Set horizontal and vertical radius size.
+        gBlur: 
             Sigma of Gaussian blur. 
+        Impulse valued noise (salt and pepper noise):
+            Noise strength for specific pixel component。
         Occlusion: 
             (x, y, w, h) of occlusion box. If mode is "percent", values are given as percentage of video size. Otherwise, they are given as pixels.
         Color:
@@ -84,6 +91,10 @@ def real_noise(
             Volume range from 0 to 1. Values greater than 1 will amplify the audio. 
         Low Pass:
             Frequency of low pass filter, given in Hz. 
+        Color Audio Noise:
+            (color, amplitude) of the constructed noise.
+            color: Which color noise is applied to the audio. Supported Values are ["white", "pink", "brown", "blue", "violet", "grey", "brown", "violet"].
+            amplitude: Specify the amplitude (0.0 - 1.0) of the generated audio stream. Default value is 1.0.
         Background: 
             (filename, volume) of background noise. Filename is the name of background noise file. Supported Values are ["random", "metro", "office", "park", "restaurant", "traffic", "white", "music_soothing", "music_tense", "song_gentle", "song_rock"]. 
             If filename is "random", a random background noise will be selected. Volume is a float number greater than 0. 
@@ -114,6 +125,8 @@ def real_noise(
         assert all([0.0 <= e for e in a_end])
     assert Path(in_file).is_file()
     Path(out_file).parent.mkdir(parents=True, exist_ok=True)
+    tmp_file_path = Path(out_file).parent / "tmp"
+    tmp_file_path.mkdir(parents=True, exist_ok=True)
     background_noise_path = Path(__file__).parent.parent / "assets" / "noise" / "background"
     sudden_noise_path = Path(__file__).parent.parent / "assets" / "noise" / "sudden"
     reverb_path = Path(__file__).parent.parent / "assets" / "noise" / "IRs"
@@ -141,8 +154,12 @@ def real_noise(
                 cmd += f"[v{i-1}]"
             if m == "blank": # Video Noise: blank screen
                 cmd += f"drawbox=enable='between(t,{s},{e})':color=black:t=fill[v{i}];"
-            elif m == "blur": # Video Noise: blur
+            elif m == "avgblur": # Video Noise
+                cmd += f"avgblur=sizeX={o[0]}:sizeY={o[1]}:enable='between(t,{s},{e})'[v{i}];"
+            elif m == "gblur": # Video Noise: Gaussian blur
                 cmd += f"gblur=sigma={o}:enable='between(t,{s},{e})'[v{i}];"
+            elif m == "impulse_value": # Video Noise: impulse_value noise.
+                cmd += f"noise=alls={o}:allf=t:enable='between(t,{s},{e})'[v{i}];"
             elif m == "occlusion": # Video Noise: occlusion
                 if mode == "percent":
                     cmd += f"drawbox=enable='between(t,{s},{e})':x={o[0]*video_width}:y={o[1]*video_height}:w={o[2]*video_width}:h={o[3]*video_height}:color=black:t=fill[v{i}];"
@@ -175,6 +192,15 @@ def real_noise(
                     cmd_a += f"[a{i-1}]"
                 cmd_a += f"lowpass=f={o}:enable='between(t,{s},{e})'[a{i}];"
                 i += 1
+            elif m == "coloran":
+                if o[0] == "random":
+                    rc = random.choice(["white", "pink", "brown", "blue", "violet", "grey", "brown", "violet"])
+                else:
+                    rc = o[0]
+                cmd_nc = f"ffmpeg -f lavfi -i anoisesrc=d={e-s}:c={rc}:r=16000:a={o[1]} -y {tmp_file_path}/an_{len(additive_noise)}.wav"
+                
+                execute_cmd(cmd_nc)
+                additive_noise.append((m, s, e, o))
             elif m == "background" or m == "sudden" or m == "reverb": # requires additional audio inputs
                 additive_noise.append((m, s, e, o))
         if len(a_mode) == len(additive_noise):
@@ -185,7 +211,6 @@ def real_noise(
     else:
         cmd += f"-c:a copy -map 0:a -y {str(out_file)}"
     # execute
-    logger.debug(cmd)
     execute_cmd(cmd)
 
     # additive noise
@@ -195,6 +220,8 @@ def real_noise(
         # inputs
         noise_file_list = []
         for i, (m, s, e, o) in enumerate(additive_noise):
+            if m == "coloran":
+                cmd += f"-i {str(Path(tmp_file_path, f'an_{i}.wav'))} "
             if m == "background":
                 if o[0] == "random":
                     noise_file = random.choice(list(Path.iterdir(background_noise_path)))
@@ -218,6 +245,8 @@ def real_noise(
         # resample, trim & delay
         cmd += f"-filter_complex \"[0:a]aresample=16000[resample0];"
         for i, (m, s, e, o) in enumerate(additive_noise):
+            if m == "coloran":
+                cmd += f"[{i+1}:a]aresample=16000,adelay={s*1000}|{s*1000}[resample{i+1}];"
             if m == "background":
                 audio_length = get_audio_length(noise_file_list[i])
                 if audio_length < e-s:
@@ -234,6 +263,8 @@ def real_noise(
         for i, (m, s, e, o) in enumerate(additive_noise):
             if i != 0:
                 cmd += f"[a{i-1}]"
+            if m == "coloran":
+                cmd += f"[resample{i+1}]amix=inputs=2:duration=first:dropout_transition=0[a{i}];"
             if m == "background":
                 cmd += f"[resample{i+1}]amix=inputs=2:duration=first:weights='1 {o[1]}':dropout_transition=0[a{i}];"
             elif m == "sudden":
@@ -242,25 +273,27 @@ def real_noise(
                 cmd += f"[resample{i+1}]afir=dry=10:wet=10:length={o[1]}[a{i}];"
         cmd = cmd.rstrip(";") + f"\" -map 0:v -c:v copy -map \"[a{len(additive_noise)-1}]\" -y {str(out_file)}"
         # execute
-        logger.debug(cmd)
         execute_cmd(cmd)
         Path(str(out_file) + '.tmp').unlink(missing_ok=True)
+        shutil.rmtree(tmp_file_path)
 
 @typechecked
 def real_noise_config(
-    in_file,
-    mode = "random_full",
-    v_noise_list = ["blank", "blur", "occlusion", "rgb2bgr", "color_inversion"],
-    v_noise_num= (1, 3),
-    v_noise_ratio= (0.1, 0.5),
-    v_noise_intensity = (0.5, 1.0),
-    a_noise_list  = ["mute", "background", "sudden"],
-    a_noise_num = (1, 3),
-    a_noise_ratio = (0.1, 0.5),
-    a_noise_intensity = (0.8, 1.0),
-    word_table = None,
-    words = [],
-    seed = None,
+    in_file: str | Path,
+    mode: Literal["random_full", "random_time", "word_random", "word_manual"] = "random_full",
+    v_noise_list: list[Literal["blank", "avgblur", "gblur", "impulse_value", "occlusion", "color",
+                                "rgb2bgr", "color_inversion"]] = ["gblur", "impulse_value", "occlusion"],
+    v_noise_num: int | tuple[int, int] = (1, 3),
+    v_noise_ratio: float | tuple[float, float] = (0.1, 0.5),
+    v_noise_intensity: float | tuple[float, float] | list = (0.5, 1.0),
+    a_noise_list: list[Literal["volume", "mute", "colorna", "lowpass", "background", "sudden",
+                                "reverb"]] = ["mute", "background", "sudden"],
+    a_noise_num: int | tuple[int, int] = (1, 3),
+    a_noise_ratio: float | tuple[float, float] = (0.1, 0.5),
+    a_noise_intensity: float | tuple[float, float] | list = (0.8, 1.0),
+    word_table: dict | None = None,
+    words: list[str] = [],
+    seed: int | None = None,
 ) -> RealNoiseConfig:
     """
     Generate configs for `real_noise` function. See "Mode Options" below for detailed usage. 
@@ -299,13 +332,16 @@ def real_noise_config(
     Noise Intensity:
         The intensity of noise indicates the strength of the noise. Its value ranges from 0 to 1. Each type of noise has its own definition of intensity. 
         "blank": Not affected.
-        "blur": Sigma = 20 * intensity. 
+        "avgblur": SizeX = SizeY = 8 * intensity + 1.
+        "gblur": Sigma = 20 * intensity. 
+        "impulse_value": Noise strength = 20 * intensity.
         "occlusion": Width/height of occlusion box = video width/height * intensity.
         "color": Contrast = 1 ± intensity. Brightness = ±0.5 * intensity. Saturation = 1 ± intensity. Only one of the three parameters will be applied each time.
         "color_channel_swapping": Not affected.
         "color_inversion": Not affected.
         "volume": Volume = (1 - intensity).
         "mute": Not affected.
+        "coloran": Specify the amplitude (0.0 - 1.0) of the generated color noise audio stream. 
         "lowpass": Frequency = 1000 * (1 - intensity).
         "background": Volume = 0.5 + 2* intensity.
         "sudden": Volume = 0.5 + 2* intensity.
@@ -339,8 +375,15 @@ def real_noise_config(
         if mode == "blank":
             v_option = None
             return v_option
-        elif mode == "blur":
+        elif mode == "avgblur":
+            sizex = sizey = int(1 + intensity * 8)
+            v_option = (sizex, sizey)
+            return v_option
+        elif mode == "gblur":
             v_option = 20 * intensity
+            return v_option
+        elif mode == "impulse_value":
+            v_option = 10 * intensity
             return v_option
         elif mode == "occlusion":
             w = video_width * intensity
@@ -371,6 +414,9 @@ def real_noise_config(
             return a_option
         elif mode == "mute":
             return 0
+        elif mode == "colorna":
+            a_option = ("random", intensity)
+            return a_option
         elif mode == "lowpass":
             a_option = 1000 * (1 - intensity)
             return a_option
@@ -452,5 +498,4 @@ def real_noise_config(
     if mode in ["word_random", "word_manual"]:
         pass
 
-    logger.debug(config)
     return RealNoiseConfig._make(config.values()) # With python 3.7+, iteration order of dict is guaranteed to be insertion order.

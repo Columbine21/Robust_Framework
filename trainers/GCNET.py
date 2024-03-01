@@ -183,7 +183,10 @@ class GCNET_Trainer(BaseTrainer):
                     inputfeats = torch.cat([audio, text, vision], dim=-1)
 
                     prediction, _, _ = model(inputfeats, qmask, umask, seq_lengths)
-                    
+                    prediction = torch.where(
+                    torch.isnan(prediction),
+                    torch.full_like(prediction, 0),
+                    prediction)
                     loss = self.criterion(prediction, labels)
                     eval_loss += loss.item()
                     y_pred.append(prediction.cpu())

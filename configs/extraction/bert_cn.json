@@ -2,7 +2,7 @@
     "text": {
       "model": "bert",
       "device": "cuda:0",
-      "pretrained": "bert-base-uncased",
+      "pretrained": "bert-base-chinese",
       "args": {}
     }
-}
+  }

@@ -1,8 +1,3 @@
-import os
-import sys
-import collections
-import time
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
